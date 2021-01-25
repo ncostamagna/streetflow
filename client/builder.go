@@ -1,4 +1,4 @@
-package rest
+package client
 
 import (
 	"net/http"
@@ -54,6 +54,8 @@ type RequestBuilder struct {
 
 	// Public for custom fine tuning
 	Client *http.Client
+
+	LogTime bool
 }
 
 func (rb *RequestBuilder) Get(url string) *Response {

@@ -1,10 +1,11 @@
-package rest
+package client
 
 import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,36 +14,58 @@ import (
 
 func (rb *RequestBuilder) doRequest(verb string, reqURL string, reqBody interface{}) (result *Response) {
 
-	fmt.Println(rb.BaseURL)
+	start := time.Now()
+
 	reqURL = rb.BaseURL + reqURL
 
+	// Inicualizar response
 	result = new(Response)
 
 	body, err := rb.marshalReqBody(reqBody)
 	if err != nil {
-
 		result.Err = err
-		return
-	}
-
-	//Get Client (client + transport)
-	client := rb.getClient()
-
-	request, err := http.NewRequest(verb, reqURL, bytes.NewBuffer(body))
-	if err != nil {
-
-		result.Err = err
+		if rb.LogTime {
+			elapsed := time.Since(start)
+			fmt.Printf("%s %s - time: %s\n", verb, reqURL, elapsed)
+		}
 		return result
 	}
 
-	// Set extra parameters
-	rb.setParams(request)
+	mock := getMock(verb, reqURL)
 
-	// Make the request
-	httpResp, err := client.Do(request)
-	if err != nil {
-		result.Err = err
-		return result
+	var httpResp *http.Response
+	if mock != nil {
+		httpResp = &http.Response{
+			StatusCode: mock.RespHTTPCode,
+			Body:       nopCloser{bytes.NewBufferString(mock.RespBody)},
+		}
+	} else {
+		//Get Client (client + transport)
+		client := rb.getClient()
+
+		request, err := http.NewRequest(verb, reqURL, bytes.NewBuffer(body))
+		if err != nil {
+			result.Err = err
+			if rb.LogTime {
+				elapsed := time.Since(start)
+				fmt.Printf("%s %s - time: %s\n", verb, reqURL, elapsed)
+			}
+			return result
+		}
+
+		// Set extra parameters
+		rb.setParams(request)
+
+		// Make the request
+		httpResp, err = client.Do(request)
+		if err != nil {
+			result.Err = err
+			if rb.LogTime {
+				elapsed := time.Since(start)
+				fmt.Printf("%s %s - time: %s\n", verb, reqURL, elapsed)
+			}
+			return result
+		}
 	}
 
 	// Read response
@@ -50,12 +73,20 @@ func (rb *RequestBuilder) doRequest(verb string, reqURL string, reqBody interfac
 	respBody, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		result.Err = err
+		if rb.LogTime {
+			elapsed := time.Since(start)
+			fmt.Printf("%s %s - time: %s\n", verb, reqURL, elapsed)
+		}
 		return result
 	}
 
 	result.Response = httpResp
 	result.byteBody = respBody
 
+	if rb.LogTime {
+		elapsed := time.Since(start)
+		fmt.Printf("%s %s - time: %s\n", verb, reqURL, elapsed)
+	}
 	return result
 }
 
@@ -81,7 +112,6 @@ func (rb *RequestBuilder) marshalReqBody(body interface{}) (b []byte, err error)
 
 func (rb *RequestBuilder) getClient() *http.Client {
 
-	fmt.Println("client 1")
 	defaultTransport := &http.Transport{
 		//MaxIdleConnsPerHost:   DefaultMaxIdleConnsPerHost,
 		//Proxy:                 http.ProxyFromEnvironment,
@@ -141,4 +171,27 @@ func (rb *RequestBuilder) setParams(req *http.Request) {
 		req.Header.Set("Content-Type", "application/"+cType)
 	}
 
+	for key, value := range rb.Headers {
+		req.Header.Set(key, value[0])
+	}
+
+}
+
+type nopCloser struct {
+	io.Reader
+}
+
+func (nopCloser) Close() error { return nil }
+
+func getMock(verb, reqURL string) *Mock {
+
+	if len(mockMap) < 1 {
+		return nil
+	}
+
+	if mock := mockMap[verb+" "+reqURL]; mock != nil {
+		return mock
+	}
+
+	return nil
 }
