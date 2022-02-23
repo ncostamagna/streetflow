@@ -18,7 +18,7 @@ func (rb *RequestBuilder) doRequest(verb string, reqURL string, reqBody interfac
 
 	reqURL = rb.BaseURL + reqURL
 
-	// Inicualizar response
+	// Initialize response
 	result = new(Response)
 
 	body, err := rb.marshalReqBody(reqBody)
@@ -40,7 +40,7 @@ func (rb *RequestBuilder) doRequest(verb string, reqURL string, reqBody interfac
 			Body:       nopCloser{bytes.NewBufferString(mock.RespBody)},
 		}
 	} else {
-		//Get Client (client + transport)
+		// Get Client (client + transport)
 		client := rb.getClient()
 
 		request, err := http.NewRequest(verb, reqURL, bytes.NewBuffer(body))
@@ -91,7 +91,6 @@ func (rb *RequestBuilder) doRequest(verb string, reqURL string, reqBody interfac
 }
 
 func (rb *RequestBuilder) marshalReqBody(body interface{}) (b []byte, err error) {
-
 	if body != nil {
 		switch rb.ContentType {
 		case JSON:
@@ -106,17 +105,13 @@ func (rb *RequestBuilder) marshalReqBody(body interface{}) (b []byte, err error)
 			}
 		}
 	}
-
 	return
 }
 
 func (rb *RequestBuilder) getClient() *http.Client {
 
 	defaultTransport := &http.Transport{
-		//MaxIdleConnsPerHost:   DefaultMaxIdleConnsPerHost,
-		//Proxy:                 http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{Timeout: rb.getConnectionTimeout()}).DialContext,
-		//ResponseHeaderTimeout: rb.getRequestTimeout(),
 	}
 
 	tr := defaultTransport
@@ -125,18 +120,6 @@ func (rb *RequestBuilder) getClient() *http.Client {
 
 	return rb.Client
 }
-
-/* func (rb *RequestBuilder) getRequestTimeout() time.Duration {
-
-	switch {
-	case rb.DisableTimeout:
-		return 0
-	case rb.Timeout > 0:
-		return rb.Timeout
-	default:
-		return DefaultTimeout
-	}
-} */
 
 func (rb *RequestBuilder) getConnectionTimeout() time.Duration {
 
@@ -152,11 +135,11 @@ func (rb *RequestBuilder) getConnectionTimeout() time.Duration {
 
 func (rb *RequestBuilder) setParams(req *http.Request) {
 
-	//Default headers
+	// Default headers
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Cache-Control", "no-cache")
 
-	//Encoding
+	// Encoding
 	var cType string
 
 	switch rb.ContentType {
@@ -172,7 +155,7 @@ func (rb *RequestBuilder) setParams(req *http.Request) {
 	}
 
 	for key, value := range rb.Headers {
-		req.Header.Set(key, value[0])
+		req.Header[key] = value
 	}
 
 }

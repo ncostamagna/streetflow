@@ -9,7 +9,7 @@ var DefaultTimeout = 500 * time.Millisecond
 
 var DefaultConnectTimeout = 1500 * time.Millisecond
 
-// DefaultMaxIdleConnsPerHost is the default maxium idle connections to have
+// DefaultMaxIdleConnsPerHost is the default maximum idle connections to have
 // per Host for all clients, that use *any* RequestBuilder that don't set
 // a CustomPool
 var DefaultMaxIdleConnsPerHost = 2
@@ -71,7 +71,7 @@ func (rb *RequestBuilder) Put(url string, body interface{}) *Response {
 }
 
 func (rb *RequestBuilder) Patch(url string, body interface{}) *Response {
-	return rb.doRequest(http.MethodPatch, url, nil)
+	return rb.doRequest(http.MethodPatch, url, body)
 }
 
 func (rb *RequestBuilder) Delete(url string) *Response {

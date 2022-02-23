@@ -15,7 +15,7 @@ type Response struct {
 	byteBody []byte
 }
 
-// String return the Respnse Body as a String.
+// String return the Response Body as a String.
 func (r *Response) String() string {
 	return string(r.Bytes())
 }
@@ -25,10 +25,13 @@ func (r *Response) Bytes() []byte {
 	return r.byteBody
 }
 
+func (r *Response) SetBytes(bytes []byte) {
+	r.byteBody = bytes
+}
+
 // FillUp set the *fill* parameter with the corresponding JSON or XML response.
 // fill could be `struct` or `map[string]interface{}`
 func (r *Response) FillUp(fill interface{}) error {
-
 	ctypeJSON := "application/json"
 	ctypeXML := "application/xml"
 
@@ -47,6 +50,5 @@ func (r *Response) FillUp(fill interface{}) error {
 
 	}
 
-	return errors.New("Response format neither JSON nor XML")
-
+	return errors.New("response format neither JSON nor XML")
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	slack, err := slack.NewSlackBuilder("birthday", "xoxb-1448869030753-1436532267283-AZoMMLoxODNMC5xydelq1uLP").Build()
+	slack, err := slack.NewSlackBuilder("birthday", "aaa").Build()
 
 	if err != nil {
 		fmt.Println("Has been an error")
